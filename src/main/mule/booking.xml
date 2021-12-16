@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:apikit-soap="http://www.mulesoft.org/schema/mule/apikit-soap" xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/apikit-soap http://www.mulesoft.org/schema/mule/apikit-soap/current/mule-apikit-soap.xsd">
+	<flow name="bookingFlow" doc:id="b9b79e19-6c2f-4b99-8d34-eb0f3262ded3" >
+		<ee:transform doc:name="Transform Message" doc:id="8b152caa-0e30-4230-b114-6793109d162b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="CreditCardDetails" ><![CDATA[%dw 2.0
+output application/json
+---
+payload.creditcarddetails]]></ee:set-variable>
+				<ee:set-variable variableName="movieId" ><![CDATA[%dw 2.0
+output application/json
+---
+payload.movie_id as Number]]></ee:set-variable>
+				<ee:set-variable variableName="name" ><![CDATA[%dw 2.0
+output application/json
+---
+payload.Name]]></ee:set-variable>
+				<ee:set-variable variableName="NumOfTickets" ><![CDATA[%dw 2.0
+output application/json
+---
+payload.no_of_tickets as Number]]></ee:set-variable>
+				<ee:set-variable variableName="CardValidation" ><![CDATA[%dw 2.0
+output application/json
+---
+if((sizeOf(payload.creditcarddetails.cvv)==3) 
+and (sizeOf(payload.creditcarddetails.ExpiryYear)==4) and ((payload.creditcarddetails.ExpiryMonth) as Number <=12)){
+	payment:"success"
+}else{
+	payment:"Unsuccessful"
+}]]></ee:set-variable>
+				<ee:set-variable variableName="email" ><![CDATA[%dw 2.0
+output application/json
+---
+payload.email]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="05c57d27-4c24-4a2a-8d96-4884e443cd47" name="EmailValidation" target="emailvalidation"/>
+		<db:select doc:name="Select" doc:id="a8f9274d-ca78-478f-b063-6cd3cbf0024d" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from Training where movieId= :movieId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[movieId:vars.movieId]]]></db:input-parameters>
+		</db:select>
+		<flow-ref doc:name="Flow Reference" doc:id="352c022e-e1df-4843-adb8-31363812a58a" name="AvailableTicketsValiadation"/>
+		<ee:transform doc:name="Transform Message" doc:id="e0938df7-bdb6-40aa-91ee-a4fe2594e070" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var Discount=100
+---
+if(vars.NumOfTickets>=5){
+	cinema:payload.cinema[0],
+	screen:payload.screen[0],
+	movie:payload.title[0],
+	schedule:payload.Schedule[0],
+	NumberOfTickets:vars.NumOfTickets,
+	city:payload.City[0],
+	movieId:payload.MovieId[0],
+	TotalPrice: payload.TicketPrice[0] as Number * vars.NumOfTickets as Number - Discount
+}else{
+	cinema:payload.cinema,
+	screen:payload.screen,
+	movie:payload.title,
+	schedule:payload.ShowTimings,
+	NumberOfTickets:vars.NumOfTickets,
+	movieId:payload.MovieId,
+	TotalPrice: payload.TicketPrice[0][0] as Number * vars.NumOfTickets as Number
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables />
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="228313b2-4055-4d07-9627-3036bf0ba702" >
+			<when expression='#[vars.CardValidation.payment matches "success"]'>
+				<ee:transform doc:name="Transform Message" doc:id="eaf2ee36-afdf-4468-9e5a-42788ce23d10">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+					</ee:variables>
+				</ee:transform>
+				<set-variable value="#[payload]" doc:name="Set Variable" doc:id="3cc0d98d-d845-4e37-a682-e39dc02be4a1" variableName="TicketDetails"/>
+				<flow-ref doc:name="Flow Reference" doc:id="9eb765da-242d-4a4e-ad64-1e2a1a7b6e63" name="Payment"/>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="78c09921-3604-4e58-831a-9641e43f030a">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+ns soap http://schemas.xmlsoap.org/soap/envelope
+---
+{
+    body: {
+        soap#Error: {
+            message:"Please enter valid Card Details"
+        }
+    } write "application/xml"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="AvailableTicketsValiadation" doc:id="4b42eb97-2c40-4feb-b5bb-5f3fa7d543b2" >
+		<choice doc:name="Choice" doc:id="a125e0fc-3298-4b93-a94e-a2178a2230d0" >
+			<when expression="#[payload.AvailableTickets[0]&gt;vars.NumOfTickets]">
+				<logger level="INFO" doc:name="Logger" doc:id="13b4d415-f6d8-4f1c-bbcf-695c4aa15f4c" message="Tickets are Available"/>
+			</when>
+			<otherwise >
+				<raise-error doc:name="Raise error" doc:id="b6a1bf70-88a0-45a9-8499-a401ed3c5bcc" type="ABC:UNAVAILABLE"/>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="EmailValidation" doc:id="215a83ba-047a-4694-8982-42d00f723654" >
+		<set-variable value="^[^.][a-zA-Z0-9.!#$%&amp;’*+\/=?^_`{|}~-]+@[a-zA-Z0-9-](?!.*?\.\.)[^_ ; ,&lt;&gt;\/\\]+(?:\.[a-zA-Z0-9-]+)[^.]*$" doc:name="Set Variable" doc:id="aff48752-4aab-43a6-b2fd-186d280e7a04" variableName="Regex"/>
+		<choice doc:name="Choice" doc:id="20db47a8-00f7-4030-8a0b-476591a8a02d" >
+			<when expression="#[vars.email matches vars.Regex]">
+				<logger level="INFO" doc:name="Logger" doc:id="881e0edd-c217-4041-b941-fbdec7b34621" message="Email is valid"/>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="263c6b01-9c37-43f3-8046-d2b254d03911" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+ns soap http://schemas.xmlsoap.org/soap/envelope
+---
+{
+    body: {
+        soap#Error: {
+            message:"Please enter valid emailid"
+        }
+    } write "application/xml"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<raise-error doc:name="Raise error" doc:id="7b0340f3-f176-4388-9f2e-b31a36e7087d" type="ABC:INVALIDEMAIL" />
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="Payment" doc:id="2eb1386c-2e98-4b58-bd57-c62061f18665" >
+		<set-variable value="#[vars.NumOfTickets as Number]" doc:name="Set Variable" doc:id="d47e5ea2-75c1-407c-80bc-df0ce0d0a4e2" variableName="UpdatedAvailableTickets"/>
+		<db:update doc:name="Update" doc:id="c7884f51-9bf3-42d5-821a-110ca3438ed9" config-ref="Database_Config">
+			<db:sql><![CDATA[UPDATE Training
+SET AvailableTickets =AvailableTickets -:UpdatedAvailableTickets
+WHERE movieId=:movieId;]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	UpdatedAvailableTickets:vars.UpdatedAvailableTickets,
+	movieId:payload.movieId[0] as Number
+	}]]]></db:input-parameters>
+		</db:update>
+		<flow-ref doc:name="Flow Reference" doc:id="8bbf0948-6198-47f1-98cb-9a1f49fafe0c" name="EmailSend"/>
+		<ee:transform doc:name="Transform Message" doc:id="6a29a09e-58e7-420d-a5cc-4e03490befee" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+ns soap http://schemas.xmlsoap.org/soap/envelope
+---
+{
+    body: {
+        soap#Ticket: {
+            TicketDetails:{
+            	message:vars.TicketDetails
+            	}
+        }
+    } write "application/xml"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="EmailSend" doc:id="41eb1e4e-ce7e-4b9a-9902-29d87911a858" >
+		<email:send doc:name="Send" doc:id="01d5b891-a702-44fc-8401-1f14679c975c" fromAddress="ranimailapur1511@gmail.com" subject="E-Ticket" config-ref="Email_SMTP">
+			<email:to-addresses >
+				<email:to-address value="#[vars.email]" />
+			</email:to-addresses>
+			<email:body >
+				<email:content ><![CDATA[#["Please find attached the ticket"]]]></email:content>
+			</email:body>
+			<email:attachments ><![CDATA[#[{
+	"Eticket.pdf": vars.TicketDetails
+}]]]></email:attachments>
+		</email:send>
+	</flow>
+</mule>

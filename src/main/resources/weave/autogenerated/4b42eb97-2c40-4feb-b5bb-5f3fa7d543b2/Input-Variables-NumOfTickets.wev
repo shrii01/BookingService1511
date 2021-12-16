@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_4b42eb97_2c40_4feb_b5bb_5f3fa7d543b2_Input_Variables_NumOfTickets = Any
+

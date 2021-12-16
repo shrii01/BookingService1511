@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_4b42eb97_2c40_4feb_b5bb_5f3fa7d543b2_Input_Payload = Array<{|  MovieId: Number,   Title: String,   TicketPrice: Number,   AvailableTickets: Number,   Schedule: String,   City: String,   Format: String,   ReleaseDay?: Number,   ReleaseMonth?: Number,   ReleaseYear?: Number,   Runtime?: Number,   Screen?: String,   Cinema?: String|}>
+

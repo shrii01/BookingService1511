@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:apikit-soap="http://www.mulesoft.org/schema/mule/apikit-soap"
+	xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd 
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/apikit-soap http://www.mulesoft.org/schema/mule/apikit-soap/current/mule-apikit-soap.xsd">
+	<http:listener-config name="api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081"/>
+    </http:listener-config>
+    <apikit-soap:config httpStatusVarName="httpStatus" name="soapkit-config" port="BookingServiceSOAP" service="BookingService" wsdlLocation="BookingServiceSoap.wsdl"/>
+    	<db:config name="Database_Config" doc:name="Database Config" doc:id="fe06d64d-cc47-45b8-9afb-cffe19370abd" >
+		<db:my-sql-connection host="sql6.freemysqlhosting.net" port="3306" user="sql6458222" password="wbUVzRvuf3" database="sql6458222" />
+	</db:config>
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="d0271938-28fe-402d-b698-64c672a956df" >
+		<email:smtp-connection host="smtp.gmail.com" port="587" user="ranimailapur1511@gmail.com" password="Shri@1511" >
+			<email:properties >
+				<email:property key="mail.smtp.starttls.enable" value="true" />
+			</email:properties>
+		</email:smtp-connection>
+	</email:smtp-config>
+	<flow name="globalFlow" doc:id="b2e6afe6-fe50-4735-b36b-3582c7143eeb" >
+		<apikit-soap:router doc:name="SOAP Router" doc:id="cfbbe8a1-928f-429e-b643-01f32071bc38" config-ref="soapkit-config"/>
+	</flow>
+</mule>

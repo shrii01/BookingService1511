@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_2eb1386c_2e98_4b58_bd57_c62061f18665_Input_Variables_CardValidation = Any
+

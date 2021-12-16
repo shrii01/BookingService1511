@@ -1,0 +1,10 @@
+%dw 2.0
+
+type auto_2eb1386c_2e98_4b58_bd57_c62061f18665_Input_Payload = {| message: String |} | {|
+  cinema: Null, 
+  screen: Null, 
+  movie: Null, 
+  orderId: Any, 
+  TotalPrice: Number
+|}
+
