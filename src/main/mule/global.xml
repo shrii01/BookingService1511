@@ -24,7 +24,4 @@ http://www.mulesoft.org/schema/mule/apikit-soap http://www.mulesoft.org/schema/m
 			</email:properties>
 		</email:smtp-connection>
 	</email:smtp-config>
-	<flow name="globalFlow" doc:id="b2e6afe6-fe50-4735-b36b-3582c7143eeb" >
-		<apikit-soap:router doc:name="SOAP Router" doc:id="cfbbe8a1-928f-429e-b643-01f32071bc38" config-ref="soapkit-config"/>
-	</flow>
 </mule>
