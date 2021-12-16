@@ -73,7 +73,7 @@ if(vars.NumOfTickets>=5){
 	cinema:payload.cinema,
 	screen:payload.screen,
 	movie:payload.title,
-	schedule:payload.ShowTimings,
+	schedule:payload.Schedule,
 	NumberOfTickets:vars.NumOfTickets,
 	movieId:payload.MovieId,
 	TotalPrice: payload.TicketPrice[0][0] as Number * vars.NumOfTickets as Number
